@@ -64,33 +64,26 @@ class ParticleFilter:
         bearings: List[Tuple[int, int, float]],
         p_defenders: np.ndarray,
     ) -> None:
-        """
-        Weight update using AoA measurements.
-        ``bearings`` is a list of ``(d, i, theta_meas)``,
-        and ``p_defenders`` is ``(M, 2)`` defender positions.
-        """
-        meas = []
-        for d, i, theta in bearings:
-            pos_mean = self._extract_position_mean(i)
-            r = np.linalg.norm(pos_mean - p_defenders[d])
-            var = sigma2_range(r, self.r0, self.sigma0)
-            meas.append((d, i, theta, var))
-
+        """Weight update using AoA measurements."""
         log_w = np.log(self.weights + 1e-300)
         for idx, part in enumerate(self.particles):
             lw = 0.0
-            for d, i, theta_meas, var in meas:
-                mu = bearing(self._pos_of(part, i), p_defenders[d])
+            for d, i, theta_meas in bearings:
+                pos_i = self._pos_of(part, i)
+                r = np.linalg.norm(pos_i - p_defenders[d])
+                var = sigma2_range(r, self.r0, self.sigma0)
+                mu = bearing(pos_i, p_defenders[d])
                 err = wrap_angle(theta_meas - mu)
-                lw += -0.5 * (err**2) / var - 0.5 * math.log(2 * math.pi * var)
+                lw += -0.5 * (err ** 2) / var - 0.5 * math.log(2 * math.pi * var)
             log_w[idx] += lw
 
         log_w -= logsumexp(log_w)
         self.weights = np.exp(log_w)
 
-        ess = 1.0 / np.sum(self.weights**2)
+        ess = 1.0 / np.sum(self.weights ** 2)
         if ess < 0.5 * self.n_part:
             self._resample_stratified()
+
 
     def estimate(self) -> Tuple[np.ndarray, np.ndarray]:
         """Return posterior mean and covariance."""

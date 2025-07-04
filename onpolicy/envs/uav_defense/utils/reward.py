@@ -1,4 +1,4 @@
-# /home/fsc-jupiter/source/Mark/AER1810/uav-defense-mappo/onpolicy/envs/uav_defense/utils/reward.py
+from __future__ import annotations
 
 import math
 from typing import List, Tuple

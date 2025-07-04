@@ -1,4 +1,6 @@
-#/home/fsc-jupiter/source/Mark/AER1810/uav-defense-mappo/scripts/train.sh
+#!/usr/bin/env bash
+
+# Usage: ./train.sh [EXP_NAME] [GPU] [STOP_STEPS]
 EXP_NAME=${1:-uav_defense}
 GPU=${2:-0}
 STOP_STEPS=${3:-2000000}

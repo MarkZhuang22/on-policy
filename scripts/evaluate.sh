@@ -1,4 +1,6 @@
-#/home/fsc-jupiter/source/Mark/AER1810/uav-defense-mappo/scripts/evaluate.sh
+#!/usr/bin/env bash
+
+# Usage: ./evaluate.sh [EXP_NAME] [GPU] [MODEL_PATH]
 EXP_NAME=${1:-uav_defense}
 GPU=${2:-0}
 MODEL_PATH=${3:-checkpoints/$EXP_NAME/final.pt}

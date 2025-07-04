@@ -73,7 +73,6 @@ class UAVDefenseEnv(ParallelEnv):
         self._step_count = 0
 
         # ---- observation & action spaces ----
-        obs_len = 4 + self.n_intr
         low = np.array(
             [-np.inf, -np.inf, -self.v_def, -self.v_def]
             + [-math.pi] * self.n_intr,
@@ -85,20 +84,15 @@ class UAVDefenseEnv(ParallelEnv):
             dtype=np.float32,
         )
 
-        self.observation_space = {
-            a: spaces.Box(low=low, high=high, dtype=np.float32)
-            for a in self.possible_agents
-        }
-        self.share_observation_space = self.observation_space
-
-        self.action_space = {
-            a: spaces.Box(
-                low=np.array([-self.v_def, -self.v_def], dtype=np.float32),
-                high=np.array([self.v_def, self.v_def], dtype=np.float32),
-                dtype=np.float32,
-            )
-            for a in self.possible_agents
-        }
+        obs_space = spaces.Box(low=low, high=high, dtype=np.float32)
+        self.observation_space = [obs_space for _ in range(self.n_def)]
+        self.share_observation_space = [obs_space for _ in range(self.n_def)]
+        act_space = spaces.Box(
+            low=np.array([-self.v_def, -self.v_def], dtype=np.float32),
+            high=np.array([self.v_def, self.v_def], dtype=np.float32),
+            dtype=np.float32,
+        )
+        self.action_space = [act_space for _ in range(self.n_def)]
 
     # ------------------------------------------------------------------
 

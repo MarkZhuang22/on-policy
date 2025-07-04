@@ -1,18 +1,4 @@
-#/home/fsc-jupiter/source/Mark/AER1810/uav-defense-mappo/setup.py
-"""
-train_uav.py
-============
-
-● 读取 cfgs/env_defense.yaml & cfgs/mappo_defense.yaml
-● 使用 SubprocVecEnv / DummyVecEnv 并行化环境
-● 选择 r-MAPPO (recurrent MAPPO) 算法
-● 支持 --exp-name, --gpu, --stop-timesteps CLI 参数
-
-Usage:
-    bash scripts/train.sh
-    # 或者手动:
-    python train_uav.py --exp-name myrun --gpu 0 --stop-timesteps 2000000
-"""
+#/home/fsc-jupiter/source/Mark/AER1810/on-policy/train_uav.py
 import argparse
 import os
 import yaml
@@ -20,6 +6,7 @@ import torch
 from pathlib import Path
 
 # on-policy imports
+from typing import Union
 from onpolicy.envs.env_wrappers import SubprocVecEnv, DummyVecEnv
 from onpolicy.envs.uav_defense.uav_defense_env import UAVDefenseEnv
 from onpolicy.algorithms.r_mappo.r_mappo import R_MAPPOConfig, RMAPPOLearner
@@ -49,7 +36,7 @@ def make_env_fn(env_cfg: dict, seed: int):
     return _init
 
 
-def make_vec_env(env_cfg: dict) -> SubprocVecEnv | DummyVecEnv:
+def make_vec_env(env_cfg: dict) -> Union[SubprocVecEnv, DummyVecEnv]:
     """
     Instantiate either a DummyVecEnv (for 1 worker) or
     SubprocVecEnv (for >1) given the n_rollout_threads in env_cfg.
@@ -93,7 +80,7 @@ def main():
     # 3) Extract obs/action spaces & agent count
     obs_space  = envs.observation_space
     act_space  = envs.action_space
-    num_agents = env_cfg["n_defenders"]  # must match your YAML key
+    num_agents = env_cfg["n_def"]  # must match your YAML key in env_defense.yaml
 
     # ------------------------------------------------------------------------
     # 4) Build R-MAPPO learner
