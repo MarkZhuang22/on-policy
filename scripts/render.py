@@ -49,23 +49,28 @@ def main() -> None:
         done = {a: False for a in env.agents}
 
         while not all(done.values()):
-            obs_array = np.stack([obs[a] for a in env.agents])
+            obs_array = torch.tensor(
+                np.stack([obs[a] for a in env.agents]), dtype=torch.float32, device=device
+            )
 
-            action, rnn_states[0] = learner.policy.act(obs_array, rnn_states[0], masks[0], deterministic=True)
-            action = action.detach().cpu().numpy()
-            rnn_states = rnn_states.detach().cpu().numpy()
+            action, rnn_states[0] = learner.policy.act(
+                obs_array, rnn_states[0], masks[0], deterministic=True
+            )
+            action_np = action.detach().cpu().numpy()
 
-            action_dict: Dict[str, np.ndarray] = {a: act for a, act in zip(env.agents, action)}
+            action_dict: Dict[str, np.ndarray] = {
+                a: act for a, act in zip(env.agents, action_np)
+            }
 
             obs, _, terminations, truncations, _ = env.step(action_dict)
 
             done = {a: terminations[a] or truncations[a] for a in env.agents}
             for i, a in enumerate(env.agents):
                 if done[a]:
-                    rnn_states[0, i] = 0
-                    masks[0, i] = 0
+                    rnn_states[0, i].fill_(0)
+                    masks[0, i].fill_(0)
                 else:
-                    masks[0, i] = 1
+                    masks[0, i].fill_(1)
             env.render()
     env.close()
 

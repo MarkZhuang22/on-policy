@@ -7,6 +7,8 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 from gymnasium import spaces
 from pettingzoo import ParallelEnv
+from .utils.vis import draw_world
+import matplotlib.pyplot as plt
 
 from .aoa import noisy_bearing
 
@@ -232,9 +234,15 @@ class UAVDefenseEnv(ParallelEnv):
     # ------------------------------------------------------------------
 
     def render(self, mode: str = "human") -> None:
-        print(f"Step {self._step_count}")
-        for i, a in enumerate(self.agents):
-            print(f"{a}: pos={self.pos_def[i]}, vel={self.vel_def[i]}")
+        """Visualize the current world state using utils.vis."""
+
+        if not hasattr(self, "_fig"):
+            self._fig, self._ax = plt.subplots(figsize=(6, 6))
+            plt.ion()
+
+        draw_world(self._ax, self.pos_def, self.pos_intr, self.Rz, title=f"Step {self._step_count}")
+        self._fig.canvas.draw()
+        self._fig.canvas.flush_events()
 
     def close(self) -> None:  # noqa: D401
         """Placeholder for API completeness."""

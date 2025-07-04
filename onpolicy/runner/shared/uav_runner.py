@@ -9,13 +9,13 @@ def _t2n(x: torch.Tensor) -> np.ndarray:
     return x.detach().cpu().numpy()
 
 
- def run(self) -> None:
+class UAVRunner(Runner):
     """Runner for the UAV defense environment."""
 
     def __init__(self, config):
         super().__init__(config)
 
-    def run(self):
+    def run(self) -> None:
         self.warmup()
         start = time.time()
         episodes = int(self.num_env_steps) // self.episode_length // self.n_rollout_threads

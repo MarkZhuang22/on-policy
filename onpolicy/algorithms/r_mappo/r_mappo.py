@@ -5,6 +5,8 @@ import torch.nn as nn
 from onpolicy.utils.util import get_gard_norm, huber_loss, mse_loss
 from onpolicy.utils.valuenorm import ValueNorm
 from onpolicy.algorithms.utils.util import check
+from onpolicy.algorithms.r_mappo.algorithm.rMAPPOPolicy import R_MAPPOPolicy
+
 
 class R_MAPPO():
     """
@@ -232,31 +234,30 @@ class R_MAPPO():
         self.policy.actor.eval()
         self.policy.critic.eval()
                   
-    class R_MAPPOConfig:
-        """Lightweight config container used by train_uav.py."""
+class R_MAPPOConfig:
+    """Lightweight config container used by train_uav.py."""
 
-        def __init__(self, **kwargs):
-            for k, v in kwargs.items():
-                setattr(self, k, v)
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
 
-    class RMAPPOLearner:
-        """Minimal wrapper exposing policy and save/load utilities."""
+class RMAPPOLearner:
+    """Minimal wrapper exposing policy and save/load utilities."""
 
-        def __init__(self, cfg: R_MAPPOConfig):
-            from onpolicy.algorithms.r_mappo.algorithm.rMAPPOPolicy import R_MAPPOPolicy
-            self.cfg = cfg
-            self.policy = R_MAPPOPolicy(cfg, cfg.obs_space, cfg.obs_space,
-                                        cfg.act_space, device=cfg.device)
-            self.trainer = R_MAPPO(cfg, self.policy, device=cfg.device)
+    def __init__(self, cfg: R_MAPPOConfig):
+        self.cfg = cfg
+        self.policy = R_MAPPOPolicy(cfg, cfg.obs_space, cfg.obs_space,
+                                    cfg.act_space, device=cfg.device)
+        self.trainer = R_MAPPO(cfg, self.policy, device=cfg.device)
 
-        def save(self, path: str | Path) -> None:
-            torch.save({
-                "actor": self.policy.actor.state_dict(),
-                "critic": self.policy.critic.state_dict(),
-            }, path)
+    def save(self, path: str | Path) -> None:
+        torch.save({
+            "actor": self.policy.actor.state_dict(),
+            "critic": self.policy.critic.state_dict(),
+        }, path)
 
-        def restore(self, path: str | Path) -> None:
-            state = torch.load(path, map_location=self.cfg.device)
-            self.policy.actor.load_state_dict(state["actor"])
-            self.policy.critic.load_state_dict(state["critic"])
+    def restore(self, path: str | Path) -> None:
+        state = torch.load(path, map_location=self.cfg.device)
+        self.policy.actor.load_state_dict(state["actor"])
+        self.policy.critic.load_state_dict(state["critic"])
