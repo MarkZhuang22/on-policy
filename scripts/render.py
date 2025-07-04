@@ -1,10 +1,14 @@
 import argparse
 import os
 from pathlib import Path
+from typing import Dict
+import numpy as np
 import torch
 import yaml
 from onpolicy.envs.uav_defense.uav_defense_env import UAVDefenseEnv
 from onpolicy.algorithms.r_mappo.r_mappo import R_MAPPOConfig, RMAPPOLearner
+
+ROOT = Path(__file__).resolve().parent.parent
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -18,14 +22,14 @@ def parse_args():
 
 def main() -> None:
     args = parse_args()
-    env_cfg = yaml.safe_load(open(root / "cfgs" / "env_defense.yaml"))
-    algo_cfg = yaml.safe_load(open(root / "cfgs" / "mappo_defense.yaml"))
+    env_cfg = yaml.safe_load(open(ROOT / "cfgs" / "env_defense.yaml"))
+    algo_cfg = yaml.safe_load(open(ROOT / "cfgs" / "mappo_defense.yaml"))
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model_path = Path(args.model_path) if args.model_path else \
-        root / "checkpoints" / args.exp_name / "final.pt"
+        ROOT / "checkpoints" / args.exp_name / "final.pt"
 
     env = UAVDefenseEnv(**env_cfg)
     cfg = R_MAPPOConfig(
@@ -36,16 +40,32 @@ def main() -> None:
         device=device,
     )
     learner = RMAPPOLearner(cfg)
-    learner.restore(root/"checkpoints"/"uav_defense"/"final.pt")
     learner.restore(model_path)
 
     for _ in range(args.episodes):
         obs, _ = env.reset()
-        done = [False] * env.n_def
-        while not all(done):
-            # 多智能体：依次决策
-            acts = learner.policy.act(obs, deterministic=True)
-            obs, _, done, _ = env.step(acts)
+        rnn_states = np.zeros((env.n_def, cfg.recurrent_N, cfg.hidden_size), dtype=np.float32)
+        masks = np.ones((env.n_def, 1), dtype=np.float32)
+        done = {a: False for a in env.agents}
+
+        while not all(done.values()):
+            obs_array = np.stack([obs[a] for a in env.agents])
+
+            action, rnn_states = learner.policy.act(obs_array, rnn_states, masks, deterministic=True)
+            action = action.detach().cpu().numpy()
+            rnn_states = rnn_states.detach().cpu().numpy()
+
+            action_dict: Dict[str, np.ndarray] = {a: act for a, act in zip(env.agents, action)}
+
+            obs, _, terminations, truncations, _ = env.step(action_dict)
+
+            done = {a: terminations[a] or truncations[a] for a in env.agents}
+            for i, a in enumerate(env.agents):
+                if done[a]:
+                    rnn_states[i] = 0
+                    masks[i] = 0
+                else:
+                    masks[i] = 1
             env.render()
     env.close()
 

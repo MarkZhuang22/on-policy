@@ -10,7 +10,7 @@ from typing import Union
 from onpolicy.envs.env_wrappers import SubprocVecEnv, DummyVecEnv
 from onpolicy.envs.uav_defense.uav_defense_env import UAVDefenseEnv
 from onpolicy.algorithms.r_mappo.r_mappo import R_MAPPOConfig, RMAPPOLearner
-from onpolicy.runner.shared.base_runner import Runner
+from onpolicy.runner.shared.uav_runner import UAVRunner
 
 # ----------------------------------------------------------------------------
 ROOT    = Path(__file__).resolve().parent
@@ -96,11 +96,16 @@ def main():
 
     # ------------------------------------------------------------------------
     # 5) Construct runner and kickoff training
-    runner = Runner(envs, learner, algo_cfg, eval_envs=eval_envs)
-    runner.run(
-        total_timesteps=args.stop_timesteps,
-        log_dir=ROOT / "runs" / args.exp_name,
-    )
+    runner = UAVRunner({
+        "envs": envs,
+        "eval_envs": eval_envs,
+        "all_args": algo_cfg,
+        "num_agents": num_agents,
+        "device": device,
+        "env_name": "UAVDefense",
+        "run_dir": ROOT,
+    })
+    runner.run()
 
     # ------------------------------------------------------------------------
     # 6) Save final checkpoint
