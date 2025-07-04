@@ -1,0 +1,54 @@
+# # 算法配置：用于构造 R_MAPPOConfig
+# # 参数名称须与 R_MAPPOConfig 构造函数保持一致
+
+# # —— 基本网络结构 —— 
+# share_policy: true             # 是否所有 agent 共享同一 actor/critic 网络
+# use_centralized_V: true        # 是否使用 centralized V
+# hidden_size: 64                # 隐藏层维度
+# layer_N: 2                     # 隐藏层数量
+
+# # —— recurrent policy —— 
+# use_recurrent_policy: true     # 是否启用 RNN
+# use_naive_recurrent_policy: false
+# recurrent_N: 1                 # RNN 层数
+# data_chunk_length: 10          # 练习时 RNN 序列长度
+
+# # —— PPO 超参 —— 
+# lr: 5e-4                       # actor 学习率
+# critic_lr: 5e-4                # critic 学习率
+# gamma: 0.99                    # 折扣因子 γ
+# gae_lambda: 0.95               # GAE λ
+# use_gae: true                  # 是否启用 GAE
+
+# clip_param: 0.2                # PPO 裁剪阈值 ε
+# ppo_epoch: 10                  # PPO 迭代轮数
+# num_mini_batch: 4              # mini-batch 数量
+# entropy_coef: 0.01             # 熵系数
+# value_loss_coef: 1.0           # value loss 权重
+# max_grad_norm: 0.5             # 梯度裁剪阈值
+
+# # —— 其他选项 —— 
+# use_linear_lr_decay: false     # 是否使用线性 lr 衰减
+# use_popart: false              # 是否启用 PopArt
+# use_feature_normalization: true# 输入层归一化
+# use_orthogonal: true           # 参数初始化：正交初始化
+
+# r-MAPPO 算法配置（连续动作，Gaussian）
+use_gae: true
+gae_lambda: 0.95
+gamma: 0.99
+
+lr: 3e-4
+critic_lr: 3e-4
+ppo_epoch: 10
+clip_param: 0.2
+entropy_coef: 0.01
+value_loss_coef: 0.5
+max_grad_norm: 0.5
+
+use_recurrent_policy: true
+data_chunk_length: 10
+hidden_size: 64
+
+# 指定 Gaussian 分布
+action_dist: gaussian

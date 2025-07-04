@@ -1,0 +1,17 @@
+# 环境配置
+n_def: 4
+n_intr: 3
+protected_radius: 50.0
+world_radius: 250.0
+max_steps: 600
+dt: 0.2
+v_def: 10.0
+v_intr: 30.0
+r0: 150.0
+sigma0: 0.02
+seed: 12345
+
+# 并行线程数
+n_rollout_threads: 8
+use_eval: true
+n_eval_rollout_threads: 2
