@@ -24,14 +24,14 @@ def load_yaml(path: Path) -> dict:
 
 
 def make_env_fn(env_cfg: dict, seed: int):
-    """
-    Return a zero-arg initializer for a UAVDefenseEnv,
-    capturing the env_cfg and a unique seed.
-    """
+    """Return a zero-arg initializer for a UAVDefenseEnv."""
     def _init():
-        env = UAVDefenseEnv(**env_cfg)
-        # PettingZoo-style envs often need a .seed() call
-        env.seed(seed)
+        kwargs = env_cfg.copy()
+        kwargs.pop("n_rollout_threads", None)
+        kwargs.pop("use_eval", None)
+        kwargs.pop("n_eval_rollout_threads", None)
+        kwargs["seed"] = seed
+        env = UAVDefenseEnv(**kwargs)
         return env
     return _init
 
@@ -41,9 +41,10 @@ def make_vec_env(env_cfg: dict) -> Union[SubprocVecEnv, DummyVecEnv]:
     Instantiate either a DummyVecEnv (for 1 worker) or
     SubprocVecEnv (for >1) given the n_rollout_threads in env_cfg.
     """
-    n_rollout = env_cfg["n_rollout_threads"]
-    base_seed = env_cfg["seed"]
-    fns = [make_env_fn(env_cfg, base_seed + i * 1000) for i in range(n_rollout)]
+    cfg = env_cfg.copy()
+    n_rollout = cfg.pop("n_rollout_threads")
+    base_seed = cfg.get("seed", 0)
+    fns = [make_env_fn(cfg, base_seed + i * 1000) for i in range(n_rollout)]
     if n_rollout == 1:
         return DummyVecEnv(fns)
     else:
