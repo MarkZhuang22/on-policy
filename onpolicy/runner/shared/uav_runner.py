@@ -4,11 +4,12 @@ import torch
 from onpolicy.runner.shared.base_runner import Runner
 
 
-def _t2n(x):
+def _t2n(x: torch.Tensor) -> np.ndarray:
+    """Convert a tensor to a numpy array on CPU."""
     return x.detach().cpu().numpy()
 
 
-class UAVRunner(Runner):
+ def run(self) -> None:
     """Runner for the UAV defense environment."""
 
     def __init__(self, config):
@@ -68,7 +69,8 @@ class UAVRunner(Runner):
             if episode % self.eval_interval == 0 and self.use_eval:
                 self.eval(total_num_steps)
 
-    def warmup(self):
+    def warmup(self) -> None:
+        """Reset environments and initialize the buffer."""
         obs = self.envs.reset()
         if self.use_centralized_V:
             share_obs = obs.reshape(self.n_rollout_threads, -1)
@@ -79,7 +81,8 @@ class UAVRunner(Runner):
         self.buffer.obs[0] = obs.copy()
 
     @torch.no_grad()
-    def collect(self, step):
+    def collect(self, step: int):
+        """Collect data for a single environment step."""
         self.trainer.prep_rollout()
         value, action, action_log_prob, rnn_states, rnn_states_critic = self.trainer.policy.get_actions(
             np.concatenate(self.buffer.share_obs[step]),
@@ -96,7 +99,8 @@ class UAVRunner(Runner):
         actions_env = actions
         return values, actions, action_log_probs, rnn_states, rnn_states_critic, actions_env
 
-    def insert(self, data):
+    def insert(self, data) -> None:
+        """Insert collected step data into the buffer."""
         obs, rewards, dones, infos, values, actions, action_log_probs, rnn_states, rnn_states_critic = data
         rnn_states[dones == True] = np.zeros(((dones == True).sum(), self.recurrent_N, self.hidden_size), dtype=np.float32)
         rnn_states_critic[dones == True] = np.zeros(((dones == True).sum(), *self.buffer.rnn_states_critic.shape[3:]), dtype=np.float32)

@@ -95,7 +95,12 @@ class UAVDefenseEnv(ParallelEnv):
         self.action_space = [act_space for _ in range(self.n_def)]
 
     # ------------------------------------------------------------------
+    def seed(self, seed: Optional[int] = None) -> Optional[int]:
+        """Set the environment's random seed."""
+        self.rng = np.random.default_rng(seed)
+        return seed
 
+    # ------------------------------------------------------------------
     def reset(
         self, seed: Optional[int] = None, options=None
     ) -> Tuple[Dict[str, np.ndarray], Dict[str, dict]]:

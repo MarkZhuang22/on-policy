@@ -91,6 +91,7 @@ def main():
         act_space=act_space,
         num_agents=num_agents,
         device=device,
+        env_name="UAVDefense",
     )
     learner = RMAPPOLearner(algo_cfg)
 

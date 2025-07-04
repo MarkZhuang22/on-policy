@@ -44,14 +44,14 @@ def main() -> None:
 
     for _ in range(args.episodes):
         obs, _ = env.reset()
-        rnn_states = np.zeros((env.n_def, cfg.recurrent_N, cfg.hidden_size), dtype=np.float32)
-        masks = np.ones((env.n_def, 1), dtype=np.float32)
+        rnn_states = np.zeros((1, env.n_def, cfg.recurrent_N, cfg.hidden_size), dtype=np.float32)
+        masks = np.ones((1, env.n_def, 1), dtype=np.float32)
         done = {a: False for a in env.agents}
 
         while not all(done.values()):
             obs_array = np.stack([obs[a] for a in env.agents])
 
-            action, rnn_states = learner.policy.act(obs_array, rnn_states, masks, deterministic=True)
+            action, rnn_states[0] = learner.policy.act(obs_array, rnn_states[0], masks[0], deterministic=True)
             action = action.detach().cpu().numpy()
             rnn_states = rnn_states.detach().cpu().numpy()
 
@@ -62,10 +62,10 @@ def main() -> None:
             done = {a: terminations[a] or truncations[a] for a in env.agents}
             for i, a in enumerate(env.agents):
                 if done[a]:
-                    rnn_states[i] = 0
-                    masks[i] = 0
+                    rnn_states[0, i] = 0
+                    masks[0, i] = 0
                 else:
-                    masks[i] = 1
+                    masks[0, i] = 1
             env.render()
     env.close()
 
